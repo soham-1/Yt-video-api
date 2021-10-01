@@ -37,13 +37,31 @@
             {% endfor %}
             </tbody>
         </table>
-        {% for page_link in pages.iter_pages(left_edge=3, right_edge=3, left_current=3, right_current=3) %}
-            {% if page_link %}
-                <a href="{{ url_for('paginate_video', page_num=page_link) }}">{{ page_link }}</a>
-            {% else %}
-                ...
-            {% endif %}
-        {% endfor %}
+        {% if views %}
+            {% for page_link in pages.iter_pages(left_edge=3, right_edge=3, left_current=3, right_current=3) %}
+                {% if page_link %}
+                    <a href="{{ url_for('paginate_video_by_views', page_num=page_link, views=views) }}">{{ page_link }}</a>
+                {% else %}
+                    ...
+                {% endif %}
+            {% endfor %}
+        {% elif likes %}
+            {% for page_link in pages.iter_pages(left_edge=3, right_edge=3, left_current=3, right_current=3) %}
+                {% if page_link %}
+                    <a href="{{ url_for('paginate_video_by_likes', page_num=page_link, likes=likes) }}">{{ page_link }}</a>
+                {% else %}
+                    ...
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            {% for page_link in pages.iter_pages(left_edge=3, right_edge=3, left_current=3, right_current=3) %}
+                {% if page_link %}
+                    <a href="{{ url_for('paginate_video', page_num=page_link) }}">{{ page_link }}</a>
+                {% else %}
+                    ...
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     </div>
 
     <!-- Optional JavaScript -->

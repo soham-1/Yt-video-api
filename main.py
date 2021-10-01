@@ -63,11 +63,20 @@ def index():
 
 class Yt_videos(Resource):
     def get(self, video_id, resolution):
+        """
+        returns video specified by id and resolution
+        resolution format - 144p,360p,...
+        """
         video = VideoModel.query.filter_by(video_id=video_id).first()
         return {'id':video.video_id, 'title':video.title, 'length':video.length, 'views':video.views, 'likes':video.likes}
     
     @marshal_with(resource_fields)
     def put(self, video_id, resolution):
+        """
+        downloads video specified by id and resolution in videos folder (an directory above)
+        returns metadata of specified video
+        resolution format - 144p,360p,...
+        """
         url = "https://www.youtube.com/watch?v=" + video_id
         url_obj = YouTube(url)
         pafy_obj = pafy.new(url)
@@ -79,16 +88,6 @@ class Yt_videos(Resource):
             db.session.commit()
         return video, 201
 
-@app.route('/listVideos/<int:page_num>', methods=['GET'])
-def paginate_video(page_num):
-    pages = VideoModel.query.paginate(per_page=1, page=page_num, error_out=True)
-    return render_template('paginate_videos.html', pages=pages)
-
-@app.route('/ytVideo/all', methods=['GET'])
-def get_all():
-    all_videos = [{'id':video.video_id, 'title':video.title, 'length':video.length, 'views':video.views, 'likes':video.likes} for video in VideoModel.query.all()]
-    return jsonify(all_videos)
-
 def download(url_obj, resolution):
     try:
         video = url_obj.streams.filter(res=resolution).first()
@@ -96,15 +95,28 @@ def download(url_obj, resolution):
     except Exception as e:
         print("video download failed")
 
-def isLoggedIN():
-    try:
-        user = dict(session).get('profile', None)
-        if user:
-            return True, user.get("given_name")
-        else:
-            return False,{}
-    except Exception as e:
-        return False,{}
+@app.route('/listVideos/<int:page_num>', methods=['GET'])
+def paginate_video(page_num):
+    pages = VideoModel.query.paginate(per_page=1, page=page_num, error_out=True)
+    return render_template('paginate_videos.html', pages=pages)
+
+@app.route('/listVideos/filter_views/<int:page_num>/<int:views>', methods=['GET'])
+def paginate_video_by_views(page_num, views):
+    """filters video with greater no. of likes than specified"""
+    pages = VideoModel.query.filter(VideoModel.views >= views).paginate(per_page=1, page=page_num, error_out=True)
+    return render_template('paginate_videos.html', pages=pages, views=views)
+
+@app.route('/listVideos/filter_likes/<int:page_num>/<int:likes>', methods=['GET'])
+def paginate_video_by_likes(page_num, likes):
+    """filters video by no. greater likes than specified"""
+    pages = VideoModel.query.filter(VideoModel.likes >= likes).paginate(per_page=1, page=page_num, error_out=True)
+    return render_template('paginate_videos.html', pages=pages, likes=likes)
+
+@app.route('/ytVideo/all', methods=['GET'])
+def get_all():
+    """list all videos added to database"""
+    all_videos = [{'id':video.video_id, 'title':video.title, 'length':video.length, 'views':video.views, 'likes':video.likes} for video in VideoModel.query.all()]
+    return jsonify(all_videos)
 
 @app.route('/login')
 def login():
@@ -128,6 +140,16 @@ def logout():
     for key in list(session.keys()):
         session.pop(key)
     return redirect('/')
+
+def isLoggedIN():
+    try:
+        user = dict(session).get('profile', None)
+        if user:
+            return True, user.get("given_name")
+        else:
+            return False,{}
+    except Exception as e:
+        return False,{}
 
 api.add_resource(Yt_videos, "/ytVideo/<string:video_id>/<string:resolution>")
 
