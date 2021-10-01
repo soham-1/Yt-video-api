@@ -31,3 +31,6 @@ python main.py
 
 > PUT
 *  /ytVideo/<string:video_id>/<string:resolution> - downloads video in videos folder for specified video and resolution.
+
+![filter_by_views](./screenshots/filter_views.PNG)
+![list all](./screenshots/list_all.PNG)
